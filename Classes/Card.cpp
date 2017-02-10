@@ -13,7 +13,8 @@ Card::Card():
     _textureX(0),
     _textureY(0),
     _posX(0),
-    _posY(0)
+    _posY(0),
+	_isSwap(false)
 {
     
 }
@@ -35,7 +36,10 @@ bool Card::isTruePos()
 {
     return _textureX==_posX&&_textureY==_posY;
 }
-
+Sprite* Card::getSprite()
+{
+	return _cardImg;
+}
 void Card::setCardSize(cocos2d::Size &size)
 {
     if(!_cardImg)return;
@@ -61,6 +65,23 @@ void Card::setPosition(float x, float y)
     if(!_cardImg)return;
     _cardImg->setPosition(x,y);
 }
+void Card::setSwap(bool c)
+{
+	_isSwap = c;
+}
+bool Card::isSwap()
+{
+	return _isSwap;
+}
+int Card::getPosX()
+{
+	return _posX;
+}
+int Card::getPosY()
+{
+	return _posY;
+}
+
 
 
 
