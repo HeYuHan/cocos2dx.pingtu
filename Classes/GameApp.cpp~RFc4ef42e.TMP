@@ -146,7 +146,7 @@ void GameApp::onCardTouch(Card* card)
 		int px2 = empty->getPosX();
 		int py2 = empty->getPosY();
 
-		if (empty->isSwap()&&((abs(px1-px2)==1&&py1==py2)||(abs(py1-py2)==1)&&px1==px2))
+		if (empty->isSwap()&&(abs(px1-px2)==1||abs(py1-py2)==1))
 		{
 			card->setPosIndex(px2, py2);
 			empty->setPosIndex(px1, py1);
