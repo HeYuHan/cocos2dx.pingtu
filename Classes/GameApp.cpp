@@ -97,6 +97,7 @@ void GameApp::initCard()
 			_cardList.push_back(card);
 			card->init(mainLayer);
 			card->setTextureIndex(x, y);
+			card->setPosIndex(x, y);
 			Sprite* cardSptire = card->getSprite();
 			Rect spriteRect;
 			spriteRect.origin.x = _backgoundTexRect.origin.x + x*dx;
