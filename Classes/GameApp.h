@@ -24,6 +24,7 @@ public:
     GameApp();
     ~GameApp();
     static GameApp* getInstance();
+    static int random(int min,int max,bool resetSeed);
     virtual bool initWithScene(Scene* scene);
 	void setBackGroundResource(const std::string &res, ResourceType type);
 	void setGameSplit(int splitx, int splity);
@@ -32,13 +33,21 @@ public:
 	void startGame();
 	void onCardTouch(Card* card);
 	void setCardTouchEvent(Card* card);
+    bool isVictory();
+    void onVictory();
+    bool swapCardPosition(Card* card);
+    
+    
 private:
 	void initCard();
+    void randMoveCard(int moveCount);
+    Card* getCardByIndex(int indexx,int indexy);
 private:
     Layer* mainLayer;
     Scene* mainScene;
     std::string _backgroundRes;
 	std::vector<Card*> _cardList;
+    Card* _swapCard;
 	int _splitx, _splity;
 	ResourceType _rType;
 	Rect _backgoundTexRect;

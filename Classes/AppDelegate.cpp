@@ -1,6 +1,10 @@
 #include "AppDelegate.h"
 #include "GameApp.h"
 
+#include "base/CCScriptSupport.h"
+#include "scripting/lua-bindings/manual/CCLuaEngine.h"
+#include "scripting/lua-bindings/manual/lua_module_register.h"
+
 USING_NS_CC;
 
 static cocos2d::Size designResolutionSize = cocos2d::Size(320, 480);
@@ -30,6 +34,22 @@ void AppDelegate::initGLContextAttrs()
 // don't modify or remove this function
 static int register_all_packages()
 {
+    // register lua engine
+    LuaEngine* engine = LuaEngine::getInstance();
+    ScriptEngineManager::getInstance()->setScriptEngine(engine);
+    lua_State* L = engine->getLuaStack()->getLuaState();
+    lua_module_register(L);
+    
+    //The call was commented because it will lead to ZeroBrane Studio can't find correct context when debugging
+    //engine->executeScriptFile("src/hello.lua");
+    
+#if CC_64BITS
+    FileUtils::getInstance()->addSearchPath("src/64bit");
+#endif
+    FileUtils::getInstance()->addSearchPath("src");
+    FileUtils::getInstance()->addSearchPath("res");
+    
+    engine->executeString("require 'hello.lua'");
     return 0; //flag for packages manager
 }
 
@@ -70,7 +90,6 @@ bool AppDelegate::applicationDidFinishLaunching() {
 //    {        
 //        director->setContentScaleFactor(MIN(smallResolutionSize.height/designResolutionSize.height, smallResolutionSize.width/designResolutionSize.width));
 //    }
-
     register_all_packages();
 
     // create a scene. it's an autorelease object

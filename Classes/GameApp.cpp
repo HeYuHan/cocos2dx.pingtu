@@ -18,7 +18,8 @@ GameApp::GameApp():
 	_splitx(0),
 	_splity(0),
 	_rType(R_TEXTURE),
-	_backgroundTex(nullptr)
+	_backgroundTex(nullptr),
+    _swapCard(nullptr)
 {
     
 }
@@ -32,8 +33,9 @@ bool GameApp::initWithScene(cocos2d::Scene *scene)
     mainScene=scene;
     mainLayer=LayerColor::create(Color4B::GRAY);
     mainScene->addChild(mainLayer);
-	setGameSplit(2, 2);
+	setGameSplit(3, 3);
 	initGame();
+    randMoveCard(50);
     return true;
 }
 void GameApp::setBackGroundResource(const std::string &res, ResourceType type)
@@ -52,7 +54,7 @@ void GameApp::setBackGroundResource(const std::string &res, ResourceType type)
 		
 	case GameApp::R_TEXTURE:
 		{
-			_backgroundTex = TextureCache::getInstance()->addImage(_backgroundRes);
+            _backgroundTex=Director::getInstance()->getTextureCache()->addImage(_backgroundRes);
 			_backgoundTexRect.origin = Vec2::ZERO;
 			_backgoundTexRect.size = _backgroundTex->getContentSize();
 			break;
@@ -66,7 +68,9 @@ void GameApp::setBackGroundResource(const std::string &res, ResourceType type)
 	float py = visibleSize.height / _backgoundTexRect.size.height;
 	float scale = px > py ? py : px;
 	_backgroundContentSize = _backgoundTexRect.size*scale;
-	_cardStartPosition = (visibleSize - _backgroundContentSize) / 2;
+    Vec2 origin = Director::getInstance()->getVisibleOrigin();
+    _cardStartPosition = (visibleSize - _backgroundContentSize) / 2;
+    _cardStartPosition+=origin;
 	
 }
 
@@ -105,12 +109,13 @@ void GameApp::initCard()
 			spriteRect.size.setSize(dx, dy);
 			cardSptire->setTexture(_backgroundTex);
 			cardSptire->setTextureRect(spriteRect);
-			cardSptire->setContentSize(Size(cx-2, cy-2));
+			cardSptire->setContentSize(Size(cx-1, cy-1));
 			cardSptire->setPosition(Vec2(x*cx + cx / 2, y*cy + cy / 2) + _cardStartPosition);
 			if (x + y == 0)
 			{
-				cardSptire->setColor(Color3B(100, 100, 100));
+                cardSptire->setColor(Color3B::GREEN);
 				card->setSwap(true);
+                _swapCard=card;
 				continue;
 			}
 			setCardTouchEvent(card);
@@ -138,24 +143,105 @@ void GameApp::setCardTouchEvent(Card* card)
 }
 void GameApp::onCardTouch(Card* card)
 {
-	for (vector<Card*>::iterator i = _cardList.begin(); i != _cardList.end(); i++)
-	{
-		Card* empty = *i;
-		int px1 = card->getPosX();
-		int py1 = card->getPosY();
-		int px2 = empty->getPosX();
-		int py2 = empty->getPosY();
-
-		if (empty->isSwap()&&((abs(px1-px2)==1&&py1==py2)||(abs(py1-py2)==1)&&px1==px2))
-		{
-			card->setPosIndex(px2, py2);
-			empty->setPosIndex(px1, py1);
-			Vec2 pos = card->getSprite()->getPosition();
-			card->getSprite()->setPosition(empty->getSprite()->getPosition());
-			empty->getSprite()->setPosition(pos);
-		}
-	}
-	CCLOGINFO("card touch:%d",1);
+	if(swapCardPosition(card))
+    {
+        if(isVictory())onVictory();
+    }
+    
+	
+}
+bool GameApp::swapCardPosition(Card *card)
+{
+    if(!card||!_swapCard)return false;
+    int px1 = card->getPosX();
+    int py1 = card->getPosY();
+    int px2 = _swapCard->getPosX();
+    int py2 = _swapCard->getPosY();
+    
+    if (((abs(px1-px2)==1&&py1==py2)||((abs(py1-py2)==1)&&px1==px2)))
+    {
+        card->setPosIndex(px2, py2);
+        _swapCard->setPosIndex(px1, py1);
+        Vec2 pos = card->getSprite()->getPosition();
+        card->getSprite()->setPosition(_swapCard->getSprite()->getPosition());
+        _swapCard->getSprite()->setPosition(pos);
+        return true;
+    }
+    return false;
+}
+int GameApp::random(int min, int max,bool resetSeed)
+{
+    if(resetSeed)
+    {
+        //获取系统时间
+        struct timeval now;
+        gettimeofday(&now, NULL);
+        
+        //初始化随机种子
+        //timeval是个结构体，里边有俩个变量，一个是以秒为单位的，一个是以微妙为单位的
+        unsigned rand_seed = (unsigned)(now.tv_sec*1000 + now.tv_usec/1000);    //都转化为毫秒
+        srand(rand_seed);
+    }
+    
+    int range=max-min;
+    int _rand = rand()%range+min;
+    return _rand;
+}
+void GameApp::randMoveCard(int moveCount)
+{
+    Card* moveCard=nullptr;
+    while (moveCount-->0) {
+        Card* findCard=nullptr;
+        int direction=random(0, 4,moveCard==nullptr);
+        switch (direction) {
+            case 0:
+                findCard=getCardByIndex(_swapCard->getPosX()+1, _swapCard->getPosY());
+                break;
+            case 1:
+                findCard=getCardByIndex(_swapCard->getPosX()-1, _swapCard->getPosY());
+                break;
+            case 2:
+                findCard=getCardByIndex(_swapCard->getPosX(), _swapCard->getPosY()+1);
+                break;
+            case 3:
+                findCard=getCardByIndex(_swapCard->getPosX(), _swapCard->getPosY()-1);
+                break;
+        }
+        if(findCard==moveCard||!swapCardPosition(findCard))
+        {
+            moveCount--;
+            continue;
+        }
+        moveCard=findCard;
+    }
+}
+Card* GameApp::getCardByIndex(int indexx, int indexy)
+{
+    for(vector<Card*>::iterator i=_cardList.begin();i!=_cardList.end();i++)
+    {
+        Card* find=*i;
+        if(find->getPosX()==indexx&&find->getPosY()==indexy)
+        {
+            return find;
+        }
+    }
+    return nullptr;
+}
+bool GameApp::isVictory()
+{
+    
+    for(vector<Card*>::iterator i=_cardList.begin();i!=_cardList.end();i++)
+    {
+        if(!(*i)->isTruePos())
+        {
+            return false;
+        }
+    }
+    return true;
+}
+void GameApp::onVictory()
+{
+    log("onVictory:%d",1);
 }
 void GameApp::clearCards()
 {
