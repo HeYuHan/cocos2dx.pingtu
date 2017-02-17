@@ -19,7 +19,9 @@ GameApp::GameApp():
 	_splity(0),
 	_rType(R_TEXTURE),
 	_backgroundTex(nullptr),
-    _swapCard(nullptr)
+    _swapCard(nullptr),
+	_moveStep(nullptr),
+	_moveStepCount(0)
 {
     
 }
@@ -33,7 +35,16 @@ bool GameApp::initWithScene(cocos2d::Scene *scene)
     mainScene=scene;
     mainLayer=LayerColor::create(Color4B::GRAY);
     mainScene->addChild(mainLayer);
-	setGameSplit(3, 3);
+	_moveStep = Label::create();
+	_moveStep->setString("移动:0");
+	_moveStep->setColor(Color3B::RED);
+	_moveStep->setSystemFontSize(16);
+	Vec2 center = getCenterPosition();
+	center.y *= 2;
+	center.y -= 10;
+	_moveStep->setPosition(center);
+	mainLayer->addChild(_moveStep, 100);
+	setGameSplit(4, 4);
 	initGame();
     randMoveCard(50);
     return true;
@@ -47,16 +58,23 @@ void GameApp::setBackGroundResource(const std::string &res, ResourceType type)
 	case GameApp::R_ATLAS:
 		{
 			auto frame = SpriteFrameCache::getInstance()->getSpriteFrameByName(res);
-			_backgoundTexRect = frame->getRect();
-			_backgroundTex = frame->getTexture();
+			if (frame)
+			{
+				_backgoundTexRect = frame->getRect();
+				_backgroundTex = frame->getTexture();
+			}
 			break;
 		}
 		
 	case GameApp::R_TEXTURE:
 		{
             _backgroundTex=Director::getInstance()->getTextureCache()->addImage(_backgroundRes);
-			_backgoundTexRect.origin = Vec2::ZERO;
-			_backgoundTexRect.size = _backgroundTex->getContentSize();
+			if (_backgroundTex)
+			{
+				_backgoundTexRect.origin = Vec2::ZERO;
+				_backgoundTexRect.size = _backgroundTex->getContentSize();
+			}
+
 			break;
 		}
 		
@@ -81,8 +99,7 @@ void GameApp::setGameSplit(int splitx, int splity)
 }
 void GameApp::initGame()
 {
-	
-	setBackGroundResource("HelloWorld.png", R_TEXTURE);
+	setBackGroundResource("background.png", R_TEXTURE);
 	initCard();
 }
 void GameApp::initCard()
@@ -135,6 +152,7 @@ void GameApp::setCardTouchEvent(Card* card)
 		if (posRect.containsPoint(touchPos))
 		{
 			onCardTouch(card);
+			addMoveStep();
 			return true;
 		}
 		return false;
@@ -149,6 +167,12 @@ void GameApp::onCardTouch(Card* card)
     }
     
 	
+}
+void GameApp::addMoveStep()
+{
+	char buffer[128];
+	sprintf(buffer, "步数: %d", _moveStepCount++);
+	_moveStep->setString(buffer);
 }
 bool GameApp::swapCardPosition(Card *card)
 {
@@ -239,8 +263,22 @@ bool GameApp::isVictory()
     }
     return true;
 }
+Vec2 GameApp::getCenterPosition()
+{
+	auto visibleSize = Director::getInstance()->getVisibleSize();
+	Vec2 origin = Director::getInstance()->getVisibleOrigin();
+	Vec2 center = (origin + visibleSize) / 2;
+	return center;
+}
 void GameApp::onVictory()
 {
+	float cx = _backgroundContentSize.width / _splitx;
+	float cy = _backgroundContentSize.height / _splity;
+	for (auto *card : _cardList)
+	{
+		card->getSprite()->setContentSize(Size(cx, cy));
+		card->getSprite()->setColor(Color3B::WHITE);
+	}
     log("onVictory:%d",1);
 }
 void GameApp::clearCards()

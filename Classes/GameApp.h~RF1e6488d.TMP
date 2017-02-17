@@ -37,7 +37,6 @@ public:
     void onVictory();
     bool swapCardPosition(Card* card);
 	Vec2 getCenterPosition();
-	void addMoveStep();
     
     
 private:
@@ -56,8 +55,6 @@ private:
 	Texture2D* _backgroundTex;
 	Vec2 _cardStartPosition;
 	Size _backgroundContentSize;
-	Label* _moveStep;
-	int _moveStepCount;
 
 };
 

@@ -1,9 +1,9 @@
 #include "AppDelegate.h"
 #include "GameApp.h"
 
-#include "base/CCScriptSupport.h"
-#include "scripting/lua-bindings/manual/CCLuaEngine.h"
-#include "scripting/lua-bindings/manual/lua_module_register.h"
+//#include "base/CCScriptSupport.h"
+//#include "scripting/lua-bindings/manual/CCLuaEngine.h"
+//#include "scripting/lua-bindings/manual/lua_module_register.h"
 
 USING_NS_CC;
 
@@ -35,10 +35,10 @@ void AppDelegate::initGLContextAttrs()
 static int register_all_packages()
 {
     // register lua engine
-    LuaEngine* engine = LuaEngine::getInstance();
+    /*LuaEngine* engine = LuaEngine::getInstance();
     ScriptEngineManager::getInstance()->setScriptEngine(engine);
     lua_State* L = engine->getLuaStack()->getLuaState();
-    lua_module_register(L);
+    lua_module_register(L);*/
     
     //The call was commented because it will lead to ZeroBrane Studio can't find correct context when debugging
     //engine->executeScriptFile("src/hello.lua");
@@ -49,7 +49,7 @@ static int register_all_packages()
     FileUtils::getInstance()->addSearchPath("src");
     FileUtils::getInstance()->addSearchPath("res");
     
-    engine->executeString("require 'hello.lua'");
+    //engine->executeString("require 'hello.lua'");
     return 0; //flag for packages manager
 }
 
